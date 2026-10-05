@@ -1,0 +1,29 @@
+# Builds site/ into the `deploy` branch. The hub on msi-ai1 sees the new commit within a minute and has cPanel pull and
+# run .cpanel.yml (hub/hosting in mizunoer/nlyz). No secrets: only the built-in GITHUB_TOKEN writes this repo.
+name: build deploy branch
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build
+        run: |
+          mkdir -p out
+          cp -r site/. out/
+          sed -i "s/__SHA__/${GITHUB_SHA::7}/; s/__TIME__/$(date -u +%Y-%m-%dT%H:%MZ)/" out/index.html
+          cp .cpanel.yml out/
+      # Commits on top of the existing deploy branch (never a force push), so cPanel's pull stays a fast-forward.
+      - name: Publish to the deploy branch
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: deploy
+          publish_dir: ./out
+          force_orphan: false
+          full_commit_message: build ${{ github.sha }}
