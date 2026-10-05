@@ -1,0 +1,6 @@
+---
+deployment:
+  tasks:
+    - export DEPLOYPATH=$HOME/public_html/hello/
+    - /bin/mkdir -p $DEPLOYPATH
+    - /bin/rsync -a --delete --exclude .git --exclude .cpanel.yml ./ $DEPLOYPATH
